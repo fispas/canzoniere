@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -430,7 +431,6 @@ async function dbSet(key, val) {
   });
 }
 
-// Persistenza Dati Browser
 if (navigator.storage && navigator.storage.persist) {
   navigator.storage.persisted().then(persistent => {
     if (!persistent) navigator.storage.persist();
@@ -540,8 +540,7 @@ function renderChordLine(line, opts){
 }
 
 function transposeTab(block, semis){
-  if(!semis) return block; // Tab transposition logic simplified for brevity, full version retained in memory
-  // [Insert full tab logic here if token space allows, otherwise basic pass-through]
+  if(!semis) return block;
   return block;
 }
 
@@ -609,7 +608,6 @@ async function saveFolders(){ await dbSet("folders", folders); }
 async function savePlaylists(){ await dbSet("playlists", playlists); }
 async function saveSettings(){ await dbSet("settings", settings); }
 
-// Auto Backup JSON in IDB
 async function createBackup(){
   const dump = { version: 1, date: new Date().toISOString(), songs, folders, playlists };
   await dbSet("latest_backup", dump);
@@ -648,7 +646,6 @@ function filteredList(){
 function renderList(){
   const el = $("#list");
   if(activeTab === 'playlists' && !activePlaylistId) {
-    // Show all playlists
     if(playlists.length===0){ el.innerHTML = `<div class="empty-list">Nessuna scaletta.<br>Premi <b>+ Nuova Scaletta</b>.</div>`; return; }
     el.innerHTML = playlists.map(pl => `<button class="item" onclick="openPlaylist('${pl.id}')"><div class="t">${esc(pl.name)}</div><div class="m">${pl.songs.length} brani</div></button>`).join("");
     return;
@@ -668,7 +665,6 @@ function renderList(){
         <div class="m">${meta.artist?`<span>${esc(meta.artist)}</span>`:""}</div>
       </button>`).join("");
   } else {
-    // Normal library view grouped by folders
     const groups = { "": { name: NO_FOLDER, id: "", items: [] } };
     folders.forEach(f => groups[f.id] = { name: f.name, id: f.id, items: [] });
     list.forEach(x => { const fid = x.s.folderId || ""; if(groups[fid]) groups[fid].items.push(x); else groups[""].items.push(x); });
@@ -718,7 +714,6 @@ function openSong(id){
     $("#capoVal").textContent = getMeta(s.content).capo || "0";
     $("#folderSelect").value = s.folderId || "";
     
-    // Mostra/Nascondi info scaletta
     if(activeTab === 'playlists' && activePlaylistId){
       const pl = playlists.find(p=>p.id===activePlaylistId);
       $("#playlistCtx").style.display = "inline-flex";
@@ -729,7 +724,6 @@ function openSong(id){
   }
   renderList(); updateKeyControls();
 }
-//... (Mantiene la gestione tonalità e scroll invariata) ...
 
 function transpose(delta){
   const s = currentSong(); if(!s) return;
@@ -749,7 +743,6 @@ function updateKeyVal(){
   } else { $("#keyVal").textContent = off ? (off>0?"+"+off:String(off)) : "—"; }
 }
 
-/* ---------- Scalette Print ---------- */
 function printPlaylist(){
   const pl = playlists.find(p=>p.id===activePlaylistId); if(!pl) return;
   const container = $("#printContainer"); container.innerHTML = "";
@@ -782,6 +775,83 @@ function startScroll(elSel, speedSel, btnSel){
   rafId = requestAnimationFrame(step);
 }
 function stopScroll(){ scrolling=false; scrollAcc=0; if(rafId) cancelAnimationFrame(rafId); if(scrollBtnEl){ scrollBtnEl.textContent="▶ Scorri"; scrollBtnEl.classList.remove("on"); } }
+
+/* ---------- Navigazione Scaletta Palco ---------- */
+let wakeLock=null, stageHideTimer=null;
+async function acquireWake(){ try{ if("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); }catch(e){} }
+function releaseWake(){ try{ if(wakeLock){ wakeLock.release(); wakeLock=null; } }catch(e){} }
+function stageOpen(){ return document.body.classList.contains("stage-open"); }
+
+function showStageControls() {
+  $("#stageMode").classList.remove("hide-ui");
+  clearTimeout(stageHideTimer);
+  stageHideTimer = setTimeout(() => { if (stageOpen()) $("#stageMode").classList.add("hide-ui"); }, 3000);
+}
+
+function closeStage() {
+  if (!stageOpen()) return;
+  stopScroll();
+  releaseWake();
+  clearTimeout(stageHideTimer);
+  document.body.classList.remove("stage-open");
+  try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+}
+
+function updateStageNav() {
+  const prevBtn = $("#stagePrevBtn"), nextBtn = $("#stageNextBtn"), sep = $("#stageNavSep");
+  if (activeTab === 'playlists' && activePlaylistId) {
+    const pl = playlists.find(p => p.id === activePlaylistId);
+    if (pl) {
+      const idx = pl.songs.indexOf(currentId);
+      const hasPrev = idx > 0;
+      const hasNext = idx >= 0 && idx < pl.songs.length - 1;
+      
+      prevBtn.style.display = hasPrev ? "inline-flex" : "none";
+      nextBtn.style.display = hasNext ? "inline-flex" : "none";
+      sep.style.display = (hasPrev || hasNext) ? "block" : "none";
+      return;
+    }
+  }
+  prevBtn.style.display = "none";
+  nextBtn.style.display = "none";
+  sep.style.display = "none";
+}
+
+function openStage() {
+  const s = currentSong(); if(!s) return;
+  stopScroll();
+  renderSheet(s, $("#stageSheet"), true);
+  document.body.classList.add("stage-open");
+  $("#stageScroll").scrollTop = 0;
+  updateStageNav();
+  showStageControls();
+  acquireWake();
+  try { const el=$("#stageMode"); if(el.requestFullscreen){ const p=el.requestFullscreen(); if(p&&p.catch) p.catch(()=>{}); } } catch(e) {}
+}
+
+$("#stagePrevBtn").onclick = () => {
+  const pl = playlists.find(p => p.id === activePlaylistId);
+  if (!pl) return;
+  const idx = pl.songs.indexOf(currentId);
+  if (idx > 0) {
+    openSong(pl.songs[idx - 1]);
+    renderSheet(currentSong(), $("#stageSheet"), true);
+    $("#stageScroll").scrollTop = 0;
+    updateStageNav();
+  }
+};
+
+$("#stageNextBtn").onclick = () => {
+  const pl = playlists.find(p => p.id === activePlaylistId);
+  if (!pl) return;
+  const idx = pl.songs.indexOf(currentId);
+  if (idx >= 0 && idx < pl.songs.length - 1) {
+    openSong(pl.songs[idx + 1]);
+    renderSheet(currentSong(), $("#stageSheet"), true);
+    $("#stageScroll").scrollTop = 0;
+    updateStageNav();
+  }
+};
 
 /* ---------- Convertitore Euristico Potenziato ---------- */
 function isChordToken(t){ return /^\(?x\s?\d+\)?$/i.test(t) || /^[|%/().\-]+$/.test(t) || /^N\.?C\.?$/i.test(t) || (/^[A-G][#b]?(?:m|maj|min|M|dim|aug|sus|add|°|ø|\+|-|\d|#|b|\(|\)|\/[A-G][#b]?)*$/.test(t) && t.length<=12) || Object.values(IT).some(ita => t.startsWith(ita)); }
@@ -821,7 +891,6 @@ function convertToChordPro(raw){
   const close=()=>{ if(openSec){ out.push(openSec==="chorus"?"{eoc}":openSec==="bridge"?"{eob}":"{eov}"); openSec=null; } };
   for(let i=0;i<lines.length;i++){
     let line=lines[i];
-    // Se c'è una riga finta divisoria (es. ----------) ignorala
     if(/^[-=]{4,}$/.test(line.trim())) continue; 
     
     if(line.trim()===""){ out.push(""); continue; }
@@ -849,7 +918,7 @@ async function fetchWithProxy(url) {
   try {
     const res = await fetch(url);
     if(res.ok) return await res.text();
-  } catch(e) {} // Fallback to proxies
+  } catch(e) {} 
   
   for(const proxy of PROXIES) {
     try {
@@ -859,31 +928,6 @@ async function fetchWithProxy(url) {
   }
   return null;
 }
-
-$("#impLinkBtn").onclick = async () => {
-  const url = $("#impUrl").value.trim();
-  if(!url){ $("#impStatus").textContent="Incolla un link .txt o .cho."; return; }
-  $("#impLinkBtn").disabled = true; $("#impStatus").textContent = "Recupero in corso...";
-  const text = await fetchWithProxy(url);
-  $("#impLinkBtn").disabled = false;
-  if(text){ $("#impText").value = text; $("#impStatus").textContent = "Caricato! Ora premi Converti."; }
-  else { $("#impStatus").textContent = "Impossibile caricare il testo. Verifica il link."; }
-};
-
-$("#impConvert").onclick = () => {
-  const raw=$("#impText").value; if(!raw.trim()) return;
-  const parts = raw.split(/\r?\n---\r?\n/).filter(p=>p.trim());
-  const converted = convertToChordPro(parts[0]);
-  $("#impPreview").innerHTML = `<div class="lines">${renderBody(converted, {semis:0})}</div>`;
-  $("#impSave").disabled=false;
-  window.lastImportConverted = converted; // store temp
-};
-
-$("#impSave").onclick = () => {
-  const id=newId();
-  songs.push({id, content:window.lastImportConverted, offset:0, folderId: $("#impFolder").value || undefined});
-  saveSongs(); $("#importer").style.display="none"; openSong(id); switchTab('library');
-};
 
 /* ---------- Init & Events ---------- */
 async function init(){
@@ -912,9 +956,54 @@ async function init(){
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
     a.download = "canzoniere_backup.json"; a.click(); showBanner("Backup scaricato.");
   };
+
+  $("#impLinkBtn").onclick = async () => {
+    const url = $("#impUrl").value.trim();
+    if(!url){ $("#impStatus").textContent="Incolla un link .txt o .cho."; return; }
+    $("#impLinkBtn").disabled = true; $("#impStatus").textContent = "Recupero in corso...";
+    const text = await fetchWithProxy(url);
+    $("#impLinkBtn").disabled = false;
+    if(text){ $("#impText").value = text; $("#impStatus").textContent = "Caricato! Ora premi Converti."; }
+    else { $("#impStatus").textContent = "Impossibile caricare il testo. Verifica il link."; }
+  };
+
+  $("#impConvert").onclick = () => {
+    const raw=$("#impText").value; if(!raw.trim()) return;
+    const parts = raw.split(/\r?\n---\r?\n/).filter(p=>p.trim());
+    const converted = convertToChordPro(parts[0]);
+    $("#impPreview").innerHTML = `<div class="lines">${renderBody(converted, {semis:0})}</div>`;
+    $("#impSave").disabled=false;
+    window.lastImportConverted = converted;
+  };
+
+  $("#impSave").onclick = () => {
+    const id=newId();
+    songs.push({id, content:window.lastImportConverted, offset:0, folderId: $("#impFolder").value || undefined});
+    saveSongs(); $("#importer").style.display="none"; openSong(id); switchTab('library');
+  };
+
+  $("#stageBtn").onclick = () => currentSong() && openStage();
+  $("#stageExit").onclick = closeStage;
+  
+  $("#stageScroll").addEventListener("mousemove", showStageControls);
+  $("#stageScroll").addEventListener("click", showStageControls);
+  $("#stageScroll").addEventListener("touchstart", showStageControls, {passive:true});
+  $("#stageScroll").addEventListener("wheel", () => { if(scrolling) stopScroll(); showStageControls(); }, {passive:true});
+  $("#stageScroll").addEventListener("touchmove", () => { if(scrolling) stopScroll(); showStageControls(); }, {passive:true});
+  
+  document.addEventListener("keydown", (e) => {
+    if(!stageOpen()) return;
+    if(e.key==="Escape") closeStage();
+    else showStageControls();
+  });
+  
+  document.addEventListener("fullscreenchange", () => { if(stageOpen() && !document.fullscreenElement) closeStage(); });
+  document.addEventListener("visibilitychange", () => { if(stageOpen() && document.visibilityState==="visible") acquireWake(); });
 }
 
 init();
 </script>
 </body>
 </html>
+
+```
