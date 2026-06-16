@@ -1,8 +1,8 @@
 {
-  "name": "Canzoniere",
+  "name": "Canzoniere Pro",
   "short_name": "Canzoniere",
-  "description": "Il tuo libro accordi personale",
-  "start_url": "./index.html",
+  "description": "Il tuo libro accordi personale con scalette e modalità palco",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#161310",
   "theme_color": "#161310",
