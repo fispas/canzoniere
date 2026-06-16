@@ -2,7 +2,7 @@
   "name": "Canzoniere",
   "short_name": "Canzoniere",
   "description": "Il tuo libro accordi personale",
-  "start_url": "./",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#161310",
   "theme_color": "#161310",
