@@ -3,11 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Canzoniere</title>
+<title>Canzoniere Pro</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#161310">
 <style>
-  /* [Mantenuti i tuoi stili originali per brevità, sono corretti] */
   :root{
     --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Charter",Georgia,"Times New Roman",serif;
     --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
@@ -34,50 +33,86 @@
     display:flex; flex-direction:column; overflow:hidden;
   }
   button{font-family:inherit; cursor:pointer; color:inherit}
-  
-  .chrome{ display:flex; align-items:center; gap:10px; padding:10px 16px; flex-wrap:wrap; background:var(--surface); border-bottom:1px solid var(--line); flex:0 0 auto; }
+
+  .chrome{
+    display:flex; align-items:center; gap:10px; padding:10px 16px; flex-wrap:wrap;
+    background:var(--surface); border-bottom:1px solid var(--line); flex:0 0 auto;
+  }
   .brand{display:flex; align-items:baseline; gap:10px; margin-right:auto}
   .brand b{font-family:var(--serif); font-weight:600; font-size:1.35rem; letter-spacing:.2px}
   .brand .glow{color:var(--accent)}
-  .brand small{color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.22em}
+  
   .seg{display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--surface2)}
   .seg button{border:0; background:transparent; padding:7px 13px; font-size:.82rem; color:var(--muted)}
   .seg button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink); font-weight:600}
+  
   .icobtn{border:1px solid var(--line); background:var(--surface2); border-radius:999px; padding:7px 14px; font-size:.85rem; display:inline-flex; align-items:center; gap:7px}
   .icobtn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600}
 
   .stage{display:flex; flex:1 1 auto; min-height:0}
-  .sidebar{ flex:0 0 288px; background:var(--surface); border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; }
+  .sidebar{
+    flex:0 0 288px; background:var(--surface); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; min-height:0;
+  }
+  .tabs{display:flex; border-bottom:1px solid var(--line); background:var(--surface2)}
+  .tabs button{flex:1; border:0; background:transparent; padding:10px; font-size:.8rem; color:var(--muted); font-weight:600}
+  .tabs button.active{color:var(--accent); border-bottom:2px solid var(--accent)}
+
   .search{padding:12px}
-  .search input{ width:100%; padding:10px 12px; border-radius:var(--r); border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:.9rem; }
-  
+  .search input{
+    width:100%; padding:10px 12px; border-radius:var(--r); border:1px solid var(--line);
+    background:var(--bg); color:var(--text); font-size:.9rem;
+  }
+
   .list{overflow:auto; padding:8px; flex:1 1 auto}
-  .item{ width:100%; text-align:left; border:0; background:transparent; border-radius:var(--r); padding:11px 12px; margin-bottom:2px; border-left:3px solid transparent; cursor:pointer;}
-  .item:hover{background:var(--surface2)}
+  .item{
+    width:100%; text-align:left; border:0; background:transparent; border-radius:var(--r);
+    padding:11px 12px; display:flex; flex-direction:column; margin-bottom:2px; border-left:3px solid transparent;
+  }
   .item.active{background:var(--surface2); border-left-color:var(--accent)}
-  .item .t{font-family:var(--serif); font-size:1.02rem}
-  .item .m{font-size:.78rem; color:var(--muted)}
+  .item-head{display:flex; justify-content:space-between; align-items:center}
+  .item .fav-star.is-fav{color:var(--accent)}
 
   .main{flex:1 1 auto; display:flex; flex-direction:column; min-height:0; min-width:0}
-  .toolbar{ display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap; padding:10px 18px; border-bottom:1px solid var(--line); background:var(--surface); }
+  .toolbar{
+    display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap;
+    padding:10px 18px; border-bottom:1px solid var(--line); background:var(--surface);
+  }
+  .ctl{display:inline-flex; align-items:center; gap:6px; font-size:.8rem; color:var(--muted)}
+  .ctl .stepper{display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--surface2)}
+  .ctl .stepper button{border:0; background:transparent; width:30px; height:30px; font-size:1rem}
+  
   .reading{flex:1 1 auto; overflow:auto; padding:34px clamp(18px,6vw,80px) 40vh}
   .sheet{max-width:760px; margin:0 auto}
-
-  .lines{font-size:calc(1.06rem * var(--fs)); line-height:1.32}
-  .ch{font-family:var(--mono); font-weight:700; color:var(--chord); font-size:.82em}
-  .cl{display:flex; flex-wrap:wrap; align-items:flex-end; row-gap:.18em}
-  .cell{display:inline-flex; flex-direction:column; margin-left:.5ch}
+  .song-head{margin-bottom:22px; border-bottom:1px solid var(--line); padding-bottom:16px; display:flex; justify-content:space-between}
   
+  /* ChordPro Rendering Styles */
+  .lines{font-size:calc(1.06rem * var(--fs)); line-height:1.32}
+  .cl{display:flex; flex-wrap:wrap; align-items:flex-end; row-gap:.18em; padding:.12em 0}
+  .cell{display:inline-flex; flex-direction:column; align-items:flex-start; margin-left:.5ch}
+  .cell .ch{font-family:var(--mono); font-weight:700; color:var(--chord); font-size:.82em; white-space:nowrap}
+  .cell .wd{white-space:pre}
+  .sect{margin:16px 0; padding-left:14px; border-left:2px solid var(--line)}
+  .sect.chorus{border-left-color:var(--accent)}
+  .tab{font-family:var(--mono); white-space:pre; overflow-x:auto; background:var(--surface2); padding:12px; border-radius:var(--r); font-size:0.9em}
+
+  /* Overlay Editors */
   .editor{position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column; z-index:100}
   .epanes{flex:1; display:flex; min-height:0}
   .epane{flex:1; display:flex; flex-direction:column; border-right:1px solid var(--line)}
-  .epane textarea{flex:1; padding:20px; background:transparent; color:var(--text); border:0; font-family:var(--mono); font-size:1rem; outline:none; resize:none}
+  .epane textarea{flex:1; padding:20px; background:transparent; color:var(--text); border:0; font-family:var(--mono); outline:none; resize:none}
 
-  /* Responsive Mobile */
+  #stageMode{position:fixed; inset:0; z-index:200; background:var(--bg); display:none; flex-direction:column}
+  body.stage-open #stageMode{display:flex}
+  .stage-bar{position:absolute; bottom:0; left:0; right:0; padding:20px; display:flex; justify-content:center; gap:15px; background:linear-gradient(transparent, var(--bg))}
+  
+  .pill{font-size:.74rem; border:1px solid var(--line); border-radius:999px; padding:4px 11px; color:var(--muted)}
+  .pill b{color:var(--accent)}
+
   @media (max-width:760px){
-    .sidebar{position:fixed; left:0; top:60px; bottom:0; width:80%; transform:translateX(-100%); transition:0.3s; z-index:50}
+    .sidebar{position:fixed; left:0; top:0; bottom:0; width:85%; transform:translateX(-100%); transition:0.3s; z-index:150}
     body.nav-open .sidebar{transform:translateX(0)}
-    .menu-btn{display:block !important}
+    .menu-btn{display:flex !important}
   }
   .menu-btn{display:none}
 </style>
@@ -96,121 +131,164 @@
     <button id="thStage">Palco</button>
     <button id="thPaper">Carta</button>
   </div>
-  <button class="icobtn" id="searchOnlineBtn">🔎 Cerca Online</button>
+  
+  <button class="icobtn" id="importBtn">⤓ Importa</button>
+  <button class="icobtn" id="portableBtn">💾 Portatile</button>
+  <button class="icobtn" id="exportDbBtn">⤴ Backup</button>
+  <button class="icobtn" id="importDbBtn">⤵ Ripristina</button>
   <button class="icobtn primary" id="newBtn">+ Nuova</button>
+  <input type="file" id="dbFileInput" accept=".json" hidden>
 </div>
 
 <div class="stage">
-  <aside class="sidebar" id="sidebar">
-    <div class="search"><input id="search" type="search" placeholder="Cerca brano o artista..."></div>
+  <aside class="sidebar">
+    <div class="tabs">
+      <button class="active" id="tabLibrary">Libreria</button>
+      <button id="tabPlaylists">Scalette</button>
+    </div>
+    <div class="search"><input id="search" type="search" placeholder="Cerca..."></div>
     <div style="padding:0 12px 10px; display:flex; gap:5px">
         <button class="icobtn" id="newFolderBtn" style="flex:1; font-size:0.7rem">+ Cartella</button>
-        <button class="icobtn" id="exportDbBtn" style="flex:1; font-size:0.7rem">Backup</button>
+        <button class="icobtn" id="newPlaylistBtn" style="flex:1; font-size:0.7rem">+ Scaletta</button>
     </div>
     <div class="list" id="list"></div>
   </aside>
 
   <main class="main">
     <div class="toolbar" id="toolbar" style="display:none">
-      <div class="seg">
-        <button id="trDown">−</button>
-        <div id="keyVal" style="padding:0 10px; display:flex; align-items:center; font-family:var(--mono)">—</div>
-        <button id="trUp">+</button>
-      </div>
-      <button class="icobtn" id="saveKeyBtn">💾 Salva Tonalità</button>
+      <span class="ctl">Tonalità
+        <span class="stepper"><button id="trDown">−</button>
+        <span class="val" id="keyVal">—</span>
+        <button id="trUp">+</button></span>
+        <button class="icobtn" id="saveKeyBtn" style="display:none">💾 Salva</button>
+      </span>
+      <span class="ctl">Testo
+        <span class="stepper"><button id="fsDown">A−</button>
+        <button id="fsUp">A+</button></span>
+      </span>
+      <select id="folderSelect" class="icobtn" style="max-width:120px"></select>
+      <button class="icobtn" id="stageBtn">⛶ Palco</button>
       <button class="icobtn" id="editBtn">Modifica</button>
+      <button class="icobtn" id="printBtn">Stampa</button>
       <button class="icobtn" id="deleteBtn" style="color:#ff6b6b">Elimina</button>
-      <select id="folderSelect" class="icobtn" style="background:var(--surface2)"></select>
     </div>
 
     <div class="reading" id="reading">
-      <div id="blank" style="text-align:center; padding-top:100px; color:var(--muted)">
-        <h2>Benvenuto</h2>
-        <p>Seleziona una canzone o creane una nuova.</p>
+      <div id="blank" class="sheet" style="text-align:center; padding-top:100px; color:var(--muted)">
+        <h2>Pronto a suonare?</h2>
+        <p>Seleziona un brano o creane uno nuovo per iniziare.</p>
       </div>
       <div class="sheet" id="sheet" style="display:none"></div>
     </div>
   </main>
 </div>
 
-<!-- Editor -->
+<!-- Editor Overlay -->
 <div class="editor" id="editor" style="display:none">
   <div class="chrome">
-    <input id="edTitleField" type="text" placeholder="Titolo" style="background:transparent; border:1px solid var(--line); color:white; padding:5px 10px; border-radius:5px">
-    <input id="edArtistField" type="text" placeholder="Artista" style="background:transparent; border:1px solid var(--line); color:white; padding:5px 10px; border-radius:5px">
+    <input id="edTitleField" type="text" placeholder="Titolo" style="background:transparent; border:1px solid var(--line); color:white; padding:8px; border-radius:5px">
+    <input id="edArtistField" type="text" placeholder="Artista" style="background:transparent; border:1px solid var(--line); color:white; padding:8px; border-radius:5px">
     <button class="icobtn" id="edConvert">↻ Converti</button>
     <button class="icobtn" id="edCancel">Annulla</button>
     <button class="icobtn primary" id="edSave">Salva</button>
   </div>
   <div class="epanes">
-    <div class="epane">
-      <textarea id="edText" placeholder="Incolla qui testo e accordi..."></textarea>
-    </div>
+    <div class="epane"><textarea id="edText" placeholder="[C]Testo con [G]accordi..."></textarea></div>
+    <div class="epane" style="padding:20px; overflow:auto"><div id="edPreview" class="sheet"></div></div>
   </div>
+</div>
+
+<!-- Importer Overlay -->
+<div class="editor" id="importer" style="display:none">
+    <div class="chrome">
+        <b>Importa</b>
+        <input id="impUrl" type="url" placeholder="Incolla link .txt o .cho" style="flex:1; background:transparent; border:1px solid var(--line); color:white; padding:8px; border-radius:5px">
+        <button class="icobtn" id="impLinkBtn">Carica Link</button>
+        <button class="icobtn" id="impAI">✨ AI Sistema</button>
+        <button class="icobtn" id="impCancel">Chiudi</button>
+        <button class="icobtn primary" id="impSave" disabled>Salva nel Canzoniere</button>
+    </div>
+    <div class="epanes">
+        <div class="epane">
+            <div style="padding:10px; font-size:0.8rem; color:var(--muted)">Incolla testo e accordi (formato classico o ChordPro). Più brani separati da ---</div>
+            <textarea id="impText"></textarea>
+            <div style="padding:10px; display:flex; gap:10px">
+                <button class="icobtn" id="impConvert">1. Converti in ChordPro</button>
+                <span id="impStatus" style="font-size:0.8rem; align-self:center"></span>
+            </div>
+        </div>
+        <div class="epane" style="padding:20px; overflow:auto"><div id="impPreview" class="sheet"></div></div>
+    </div>
+</div>
+
+<!-- Stage Mode -->
+<div id="stageMode">
+    <div class="reading" id="stageScroll">
+        <div class="sheet" id="stageSheet"></div>
+    </div>
+    <div class="stage-bar">
+        <button class="icobtn" id="stagePrevBtn">⏮ Prec</button>
+        <button class="icobtn" id="stageScrollBtn">▶ Scorri</button>
+        <button class="icobtn" id="stageNextBtn">Succ ⏭</button>
+        <button class="icobtn" id="stageExit" style="background:#ff6b6b; color:white">✕ Esci</button>
+    </div>
 </div>
 
 <script>
 "use strict";
 const $ = s => document.querySelector(s);
 
-// --- DB & STATE ---
+// --- DATABASE (IndexedDB) ---
 let db;
-let songs = [], folders = [], settings = { theme:"stage", notation:"en", fs:1 };
-let currentId = null;
+let songs = [], folders = [], playlists = [], settings = { theme:"stage", notation:"en", fs:1 };
+let currentId = null, activeTab = 'library', activePlaylistId = null;
 
 async function init() {
-    // IndexedDB
     db = await new Promise(resolve => {
-        const req = indexedDB.open("CanzoniereDB", 1);
+        const req = indexedDB.open("CanzoniereDB", 2);
         req.onupgradeneeded = e => {
-            const db = e.target.result;
-            db.createObjectStore("store");
+            const d = e.target.result;
+            if(!d.objectStoreNames.contains("store")) d.createObjectStore("store");
         };
         req.onsuccess = e => resolve(e.target.result);
     });
 
-    // Load Data
     songs = await dbGet("songs") || [];
     folders = await dbGet("folders") || [];
-    settings = await dbGet("settings") || settings;
+    playlists = await dbGet("playlists") || [];
+    settings = Object.assign(settings, await dbGet("settings") || {});
+
+    // Portable Mode Logic
+    if(window.PORTABLE_DB) {
+        songs = window.PORTABLE_DB.songs;
+        folders = window.PORTABLE_DB.folders;
+        playlists = window.PORTABLE_DB.playlists;
+    }
 
     applySettings();
     renderList();
     setupEvents();
-    
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 }
 
-async function dbGet(k) {
-    return new Promise(r => {
-        const req = db.transaction("store").objectStore("store").get(k);
-        req.onsuccess = () => r(req.result);
-    });
-}
-async function dbSet(k, v) {
-    return new Promise(r => {
-        const tx = db.transaction("store", "readwrite");
-        tx.objectStore("store").put(v, k);
-        tx.oncomplete = r;
-    });
-}
+async function dbGet(k) { return new Promise(r => { const req = db.transaction("store").objectStore("store").get(k); req.onsuccess = () => r(req.result); }); }
+async function dbSet(k, v) { return new Promise(r => { const tx = db.transaction("store", "readwrite"); tx.objectStore("store").put(v, k); tx.oncomplete = r; }); }
 
-// --- LOGIC ---
+// --- MUSIC LOGIC ---
 const SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
 const IT = {C:"Do",D:"Re",E:"Mi",F:"Fa",G:"Sol",A:"La",B:"Si"};
 
 function transposeChord(ch, semis) {
-    if(!ch) return ch;
+    if(!ch || semis === 0) return ch;
     const m = ch.match(/^([A-G])([#b]?)(.*)$/);
     if(!m) return ch;
-    const root = m[1] + m[2];
-    const rest = m[3];
+    let root = m[1] + m[2];
     let idx = SHARP.indexOf(root);
     if(idx === -1) idx = FLAT.indexOf(root);
     if(idx === -1) return ch;
     const newRoot = SHARP[((idx + semis) % 12 + 12) % 12];
-    return newRoot + rest;
+    return newRoot + m[3];
 }
 
 function formatChord(ch) {
@@ -220,11 +298,17 @@ function formatChord(ch) {
 
 function parseChordPro(content, offset = 0) {
     let html = "";
+    let inChorus = false;
     content.split("\n").forEach(line => {
-        if(line.startsWith("{") || line.trim() === "") return;
+        line = line.trim();
+        if(line.startsWith("{soc}")) { html += `<div class="sect chorus">`; inChorus = true; return; }
+        if(line.startsWith("{eoc}")) { html += `</div>`; inChorus = false; return; }
+        if(line.startsWith("{c:")) { html += `<div style="color:var(--section); font-style:italic; margin:10px 0">${line.replace(/{c:|}/g,'')}</div>`; return; }
+        if(line.startsWith("{") || line === "") { if(line==="") html += `<div style="height:1em"></div>`; return; }
+
         const matches = [...line.matchAll(/\[([^\]]+)\]/g)];
         if(matches.length === 0) {
-            html += `<div class="ly">${line || "&nbsp;" }</div>`;
+            html += `<div class="ly">${line}</div>`;
         } else {
             html += `<div class="cl">`;
             let lastPos = 0;
@@ -240,16 +324,34 @@ function parseChordPro(content, offset = 0) {
     return html;
 }
 
+// --- UI RENDERING ---
 function renderList() {
     const q = $("#search").value.toLowerCase();
     const listEl = $("#list");
     listEl.innerHTML = "";
 
-    // Gruppo per cartelle
+    if(activeTab === 'playlists' && !activePlaylistId) {
+        playlists.forEach(pl => {
+            const btn = document.createElement("button");
+            btn.className = "item";
+            btn.innerHTML = `<div class="t">📂 ${pl.name}</div><div class="m">${pl.songs.length} brani</div>`;
+            btn.onclick = () => { activePlaylistId = pl.id; renderList(); };
+            listEl.appendChild(btn);
+        });
+        return;
+    }
+
+    let source = songs;
+    if(activeTab === 'playlists' && activePlaylistId) {
+        const pl = playlists.find(p => p.id === activePlaylistId);
+        source = pl.songs.map(sid => songs.find(s => s.id === sid)).filter(Boolean);
+        listEl.innerHTML = `<button class="icobtn" onclick="activePlaylistId=null; renderList()" style="margin-bottom:10px">⬅ Indietro</button>`;
+    }
+
     const groups = { "none": [] };
     folders.forEach(f => groups[f.id] = []);
     
-    songs.forEach(s => {
+    source.forEach(s => {
         if(q && !s.title.toLowerCase().includes(q)) return;
         const fid = s.folderId || "none";
         if(groups[fid]) groups[fid].push(s);
@@ -257,26 +359,28 @@ function renderList() {
 
     Object.keys(groups).forEach(fid => {
         const folderSongs = groups[fid];
-        if(fid !== "none") {
+        if(fid !== "none" && activeTab === 'library') {
             const f = folders.find(x => x.id === fid);
-            const fdiv = document.createElement("div");
-            fdiv.innerHTML = `<div style="padding:10px; font-size:0.7rem; color:var(--accent); font-weight:bold; display:flex; justify-content:space-between">
+            listEl.innerHTML += `<div style="padding:10px; font-size:0.7rem; color:var(--accent); font-weight:bold; display:flex; justify-content:space-between">
                 ${f.name.toUpperCase()} <span onclick="deleteFolder('${f.id}')" style="cursor:pointer">✕</span>
             </div>`;
-            listEl.appendChild(fdiv);
         }
-        folderSongs.sort((a,b)=>a.title.localeCompare(b.title)).forEach(s => {
+        folderSongs.forEach(s => {
             const btn = document.createElement("button");
             btn.className = `item ${s.id === currentId ? 'active' : ''}`;
-            btn.innerHTML = `<div class="t">${s.title}</div><div class="m">${s.artist || ''}</div>`;
+            btn.innerHTML = `
+                <div class="item-head">
+                    <div class="t">${s.title}</div>
+                    <span class="fav-star ${s.fav?'is-fav':''}" onclick="event.stopPropagation(); toggleFav('${s.id}')">⭐</span>
+                </div>
+                <div class="m">${s.artist || ''}</div>`;
             btn.onclick = () => openSong(s.id);
             listEl.appendChild(btn);
         });
     });
 
-    // Update folder select
-    const sel = $("#folderSelect");
-    sel.innerHTML = `<option value="">Senza cartella</option>` + folders.map(f => `<option value="${f.id}">${f.name}</option>`).join("");
+    const fSel = $("#folderSelect");
+    fSel.innerHTML = `<option value="">Senza cartella</option>` + folders.map(f => `<option value="${f.id}">${f.name}</option>`).join("");
 }
 
 function openSong(id) {
@@ -287,170 +391,177 @@ function openSong(id) {
     $("#blank").style.display = "none";
     $("#sheet").style.display = "block";
     $("#toolbar").style.display = "flex";
-    $("#sheet").innerHTML = `<h1>${s.title}</h1><p style="color:var(--muted)">${s.artist || ''}</p><div class="lines">${parseChordPro(s.content, s.offset || 0)}</div>`;
+    
+    const htmlHead = `<div class="song-head">
+        <div><h1>${s.title}</h1><p style="color:var(--muted)">${s.artist || ''}</p></div>
+        <div style="display:flex; gap:10px; align-items:flex-start">
+            <button class="icobtn" onclick="addToPlaylistPrompt('${s.id}')">➕ Scaletta</button>
+        </div>
+    </div>`;
+    
+    $("#sheet").innerHTML = htmlHead + `<div class="lines">${parseChordPro(s.content, s.offset || 0)}</div>`;
     $("#keyVal").textContent = s.offset || 0;
+    $("#saveKeyBtn").style.display = s.offset !== 0 ? "inline-block" : "none";
     $("#folderSelect").value = s.folderId || "";
     
     document.body.classList.remove("nav-open");
     renderList();
 }
 
-function setupEvents() {
-    $("#menuBtn").onclick = () => document.body.classList.toggle("nav-open");
-    
-    $("#search").oninput = renderList;
-
-    $("#newBtn").onclick = () => {
-        currentId = null;
-        $("#edTitleField").value = "";
-        $("#edArtistField").value = "";
-        $("#edText").value = "";
-        $("#editor").style.display = "flex";
-    };
-
-    $("#editBtn").onclick = () => {
-        const s = songs.find(x => x.id === currentId);
-        if(!s) return;
-        $("#edTitleField").value = s.title;
-        $("#edArtistField").value = s.artist;
-        $("#edText").value = s.content;
-        $("#editor").style.display = "flex";
-    };
-
-    $("#edSave").onclick = async () => {
-        const title = $("#edTitleField").value || "Senza titolo";
-        const artist = $("#edArtistField").value;
-        const content = $("#edText").value;
-
-        if(currentId) {
-            const s = songs.find(x => x.id === currentId);
-            s.title = title; s.artist = artist; s.content = content;
-        } else {
-            const newSong = { id: "s"+Date.now(), title, artist, content, offset: 0 };
-            songs.push(newSong);
-            currentId = newSong.id;
-        }
-        await dbSet("songs", songs);
-        $("#editor").style.display = "none";
-        openSong(currentId);
-    };
-
-    $("#edCancel").onclick = () => $("#editor").style.display = "none";
-
-    $("#deleteBtn").onclick = async () => {
-        if(!confirm("Eliminare questa canzone?")) return;
-        songs = songs.filter(x => x.id !== currentId);
-        await dbSet("songs", songs);
-        location.reload();
-    };
-
-    $("#trUp").onclick = () => shiftKey(1);
-    $("#trDown").onclick = () => shiftKey(-1);
-
-    $("#saveKeyBtn").onclick = async () => {
-        const s = songs.find(x => x.id === currentId);
-        if(!s) return;
-        // Trasforma il contenuto applicando l'offset in modo permanente
-        s.content = s.content.replace(/\[([^\]]+)\]/g, (m, c) => `[${transposeChord(c, s.offset || 0)}]`);
-        s.offset = 0;
-        await dbSet("songs", songs);
-        openSong(currentId);
-        alert("Tonalità salvata nel testo.");
-    };
-
-    $("#thStage").onclick = () => setTheme("stage");
-    $("#thPaper").onclick = () => setTheme("paper");
-    $("#notEn").onclick = () => setNotation("en");
-    $("#notIt").onclick = () => setNotation("it");
-
-    $("#newFolderBtn").onclick = async () => {
-        const n = prompt("Nome cartella:");
-        if(n) {
-            folders.push({id: "f"+Date.now(), name: n});
-            await dbSet("folders", folders);
-            renderList();
-        }
-    };
-
-    $("#folderSelect").onchange = async (e) => {
-        const s = songs.find(x => x.id === currentId);
-        if(s) {
-            s.folderId = e.target.value;
-            await dbSet("songs", songs);
-            renderList();
-        }
-    };
-
-    $("#searchOnlineBtn").onclick = () => {
-        const q = prompt("Cerca accordi per:");
-        if(q) window.open(`https://www.google.com/search?q=${encodeURIComponent(q + " chords ultimate guitar")}`, "_blank");
-    };
-
-    $("#edConvert").onclick = () => {
-        // Semplice convertitore euristico
-        let text = $("#edText").value;
-        const lines = text.split("\n");
-        let result = "";
-        for(let i=0; i<lines.length; i++) {
-            let line = lines[i];
-            let nextLine = lines[i+1] || "";
-            // Se la riga sembra contenere solo accordi
-            if (line.trim() !== "" && line.match(/^[A-G][#b]?m?[0-9]?(\s+[A-G][#b]?m?[0-9]?)*$/)) {
-                // Fondi con la riga successiva
-                let merged = "";
-                let chords = line.split(/(\s+)/);
-                let pos = 0;
-                chords.forEach(c => {
-                    if(c.trim() === "") { pos += c.length; }
-                    else {
-                        merged += `[${c}]`;
-                        pos += c.length;
-                    }
-                });
-                result += merged + nextLine + "\n";
-                i++; // Salta riga testo
-            } else {
-                result += line + "\n";
-            }
-        }
-        $("#edText").value = result;
-    };
-}
-
-function shiftKey(delta) {
-    const s = songs.find(x => x.id === currentId);
-    if(!s) return;
-    s.offset = (s.offset || 0) + delta;
-    openSong(currentId);
-}
-
-function setTheme(t) {
-    settings.theme = t;
-    applySettings();
-    dbSet("settings", settings);
-}
-function setNotation(n) {
-    settings.notation = n;
-    applySettings();
-    dbSet("settings", settings);
-}
-
-function applySettings() {
-    document.body.setAttribute("data-theme", settings.theme);
-    $("#thStage").setAttribute("aria-pressed", settings.theme === "stage");
-    $("#thPaper").setAttribute("aria-pressed", settings.theme === "paper");
-    $("#notEn").setAttribute("aria-pressed", settings.notation === "en");
-    $("#notIt").setAttribute("aria-pressed", settings.notation === "it");
-    if(currentId) openSong(currentId);
-}
-
-async function deleteFolder(id) {
-    if(!confirm("Eliminare cartella? I brani non verranno cancellati.")) return;
-    folders = folders.filter(f => f.id !== id);
-    songs.forEach(s => { if(s.folderId === id) delete s.folderId; });
-    await dbSet("folders", folders);
+// --- ACTIONS ---
+async function toggleFav(id) {
+    const s = songs.find(x => x.id === id);
+    s.fav = !s.fav;
     await dbSet("songs", songs);
     renderList();
+}
+
+async function addToPlaylistPrompt(sid) {
+    if(playlists.length === 0) { alert("Crea prima una scaletta!"); return; }
+    const names = playlists.map((p, i) => `${i+1}. ${p.name}`).join("\n");
+    const choice = prompt(`A quale scaletta vuoi aggiungere il brano?\n${names}`);
+    if(choice) {
+        const pl = playlists[parseInt(choice)-1];
+        if(pl && !pl.songs.includes(sid)) {
+            pl.songs.push(sid);
+            await dbSet("playlists", playlists);
+            alert("Aggiunto!");
+        }
+    }
+}
+
+function setupEvents() {
+    $("#menuBtn").onclick = () => document.body.classList.toggle("nav-open");
+    $("#tabLibrary").onclick = () => { activeTab = 'library'; activePlaylistId = null; renderList(); };
+    $("#tabPlaylists").onclick = () => { activeTab = 'playlists'; activePlaylistId = null; renderList(); };
+    $("#search").oninput = renderList;
+
+    // Folder & Playlist
+    $("#newFolderBtn").onclick = async () => {
+        const n = prompt("Nome cartella:");
+        if(n) { folders.push({id: "f"+Date.now(), name: n}); await dbSet("folders", folders); renderList(); }
+    };
+    $("#newPlaylistBtn").onclick = async () => {
+        const n = prompt("Nome scaletta:");
+        if(n) { playlists.push({id: "p"+Date.now(), name: n, songs: []}); await dbSet("playlists", playlists); renderList(); }
+    };
+
+    // Editor
+    $("#newBtn").onclick = () => { currentId = null; $("#edTitleField").value = ""; $("#edArtistField").value = ""; $("#edText").value = ""; $("#editor").style.display = "flex"; };
+    $("#editBtn").onclick = () => { const s = songs.find(x => x.id === currentId); $("#edTitleField").value = s.title; $("#edArtistField").value = s.artist; $("#edText").value = s.content; $("#editor").style.display = "flex"; updateEdPreview(); };
+    $("#edSave").onclick = async () => {
+        const s = currentId ? songs.find(x => x.id === currentId) : {id: "s"+Date.now(), offset: 0};
+        s.title = $("#edTitleField").value; s.artist = $("#edArtistField").value; s.content = $("#edText").value;
+        if(!currentId) songs.push(s);
+        await dbSet("songs", songs); $("#editor").style.display = "none"; openSong(s.id);
+    };
+    $("#edCancel").onclick = () => $("#editor").style.display = "none";
+    $("#edText").oninput = updateEdPreview;
+
+    // Transpose
+    $("#trUp").onclick = () => shiftKey(1);
+    $("#trDown").onclick = () => shiftKey(-1);
+    $("#saveKeyBtn").onclick = async () => {
+        const s = songs.find(x => x.id === currentId);
+        s.content = s.content.replace(/\[([^\]]+)\]/g, (m, c) => `[${transposeChord(c, s.offset)}]`);
+        s.offset = 0;
+        await dbSet("songs", songs); openSong(currentId);
+    };
+
+    // Importer
+    $("#importBtn").onclick = () => $("#importer").style.display = "flex";
+    $("#impCancel").onclick = () => $("#importer").style.display = "none";
+    $("#impConvert").onclick = () => {
+        const raw = $("#impText").value;
+        const converted = raw.split("---").map(part => {
+            // Semplice euristica per convertire accordi sopra il testo in ChordPro
+            const lines = part.split("\n");
+            let res = "";
+            for(let i=0; i<lines.length; i++) {
+                if(lines[i].match(/^[A-G][#b]?m?[0-9]?(\s+[A-G][#b]?m?[0-9]?)*$/)) {
+                    let chords = lines[i], text = lines[i+1] || "";
+                    let merged = "", pos = 0;
+                    // Logica di merge semplificata
+                    res += "[" + chords.trim().split(/\s+/).join("][") + "]" + text + "\n";
+                    i++;
+                } else res += lines[i] + "\n";
+            }
+            return res;
+        }).join("\n---\n");
+        $("#impText").value = converted;
+        $("#impPreview").innerHTML = parseChordPro(converted);
+        $("#impSave").disabled = false;
+    };
+    $("#impSave").onclick = async () => {
+        const parts = $("#impText").value.split("---");
+        parts.forEach(p => {
+            const title = p.split("\n")[0].substring(0, 30) || "Brano Importato";
+            songs.push({id: "s"+Date.now()+Math.random(), title, content: p, offset: 0});
+        });
+        await dbSet("songs", songs); $("#importer").style.display = "none"; renderList();
+    };
+
+    // Palco
+    $("#stageBtn").onclick = () => {
+        const s = songs.find(x => x.id === currentId);
+        $("#stageSheet").innerHTML = `<h1>${s.title}</h1><div class="lines">${parseChordPro(s.content, s.offset)}</div>`;
+        document.body.classList.add("stage-open");
+    };
+    $("#stageExit").onclick = () => document.body.classList.remove("stage-open");
+
+    // Settings
+    $("#thStage").onclick = () => { settings.theme="stage"; applySettings(); dbSet("settings", settings); };
+    $("#thPaper").onclick = () => { settings.theme="paper"; applySettings(); dbSet("settings", settings); };
+    $("#notEn").onclick = () => { settings.notation="en"; applySettings(); dbSet("settings", settings); };
+    $("#notIt").onclick = () => { settings.notation="it"; applySettings(); dbSet("settings", settings); };
+    
+    $("#fsUp").onclick = () => { settings.fs += 0.1; applySettings(); dbSet("settings", settings); };
+    $("#fsDown").onclick = () => { settings.fs -= 0.1; applySettings(); dbSet("settings", settings); };
+
+    // Backup & Restore
+    $("#exportDbBtn").onclick = () => {
+        const data = JSON.stringify({songs, folders, playlists, settings});
+        const blob = new Blob([data], {type: "application/json"});
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = "canzoniere_backup.json"; a.click();
+    };
+    $("#importDbBtn").onclick = () => $("#dbFileInput").click();
+    $("#dbFileInput").onchange = async (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async (re) => {
+            const data = JSON.parse(re.target.result);
+            songs = data.songs; folders = data.folders; playlists = data.playlists; settings = data.settings;
+            await dbSet("songs", songs); await dbSet("folders", folders); await dbSet("playlists", playlists); await dbSet("settings", settings);
+            location.reload();
+        };
+        reader.readAsText(file);
+    };
+
+    $("#portableBtn").onclick = () => {
+        const dbExport = {songs, folders, playlists, settings};
+        let html = document.documentElement.outerHTML;
+        const script = `<script>window.PORTABLE_DB = ${JSON.stringify(dbExport)};<\/script>`;
+        html = html.replace("<script", script + "<script");
+        const blob = new Blob([html], {type: "text/html"});
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = "canzoniere_portatile.html"; a.click();
+    };
+    
+    $("#printBtn").onclick = () => window.print();
+}
+
+function updateEdPreview() { $("#edPreview").innerHTML = parseChordPro($("#edText").value); }
+function shiftKey(d) { const s = songs.find(x => x.id === currentId); s.offset += d; openSong(currentId); }
+function applySettings() {
+    document.body.setAttribute("data-theme", settings.theme);
+    document.documentElement.style.setProperty("--fs", settings.fs);
+    $("#notEn").setAttribute("aria-pressed", settings.notation === "en");
+    $("#notIt").setAttribute("aria-pressed", settings.notation === "it");
+    $("#thStage").setAttribute("aria-pressed", settings.theme === "stage");
+    $("#thPaper").setAttribute("aria-pressed", settings.theme === "paper");
+    if(currentId) openSong(currentId);
 }
 
 init();
