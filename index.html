@@ -201,9 +201,15 @@
   .stage-bar{position:absolute; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
     padding:14px 16px calc(14px + env(safe-area-inset-bottom));
     background:linear-gradient(to top, var(--surface) 40%, transparent); transition:opacity .3s ease}
-  #stageMode.hide-ui .stage-bar{opacity:0; pointer-events:none}
+  #stageMode.hide-ui .stage-bar, #stageMode.hide-ui .stage-top{opacity:0; pointer-events:none}
+  .stage-top{position:absolute; left:0; right:0; top:0; display:flex; align-items:center; justify-content:center; gap:12px;
+    padding:calc(12px + env(safe-area-inset-top)) 16px 14px;
+    background:linear-gradient(to bottom, var(--surface) 45%, transparent); transition:opacity .3s ease}
+  .stage-top .st-title{font-family:var(--serif); font-size:1.05rem; color:var(--text); max-width:68vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .stage-top .st-pos{color:var(--muted); font-family:var(--mono); font-size:.82rem; flex:0 0 auto}
   .stage-bar .sbtn{border:1px solid var(--line); background:var(--surface2); color:var(--text); border-radius:999px; padding:10px 18px; font-size:1rem; display:inline-flex; align-items:center; gap:7px}
   .stage-bar .sbtn:hover{border-color:var(--accent)}
+  .stage-bar .sbtn:disabled{opacity:.35; border-color:var(--line); cursor:default}
   .stage-bar .sbtn.on{background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600}
   .stage-bar .sbtn.exit{background:transparent}
   .stage-bar input[type=range]{accent-color:var(--accent); width:130px}
@@ -376,10 +382,17 @@
 </div>
 
 <div id="stageMode">
+  <div class="stage-top" id="stageTop">
+    <span class="st-title" id="stageTitle"></span>
+    <span class="st-pos" id="stagePos"></span>
+  </div>
   <div class="stage-scroll" id="stageScroll">
     <div class="sheet" id="stageSheet"></div>
   </div>
   <div class="stage-bar" id="stageBar">
+    <button class="sbtn" id="stagePrev" title="Brano precedente (←)">‹</button>
+    <button class="sbtn" id="stageNext" title="Brano successivo (→)">›</button>
+    <span class="stage-sep"></span>
     <button class="sbtn" id="stageScrollBtn">▶ Scorri</button>
     <input id="stageScrollSpeed" type="range" min="1" max="10" value="4" title="Velocità scorrimento">
     <span class="stage-sep"></span>
@@ -1056,9 +1069,35 @@ function openStage(){
   renderSheet(s, $("#stageSheet"));
   document.body.classList.add("stage-open");
   $("#stageScroll").scrollTop = 0;
+  updateStageInfo();
   showStageControls();
   acquireWake();
   try{ const el=$("#stageMode"); if(el.requestFullscreen){ const p=el.requestFullscreen(); if(p&&p.catch) p.catch(()=>{}); } }catch(e){}
+}
+// Lista dei brani nello stesso ordine/filtro dell'elenco laterale.
+function stageList(){ return filteredSongs().map(x=>x.s.id); }
+function updateStageInfo(){
+  const ids = stageList();
+  const idx = ids.indexOf(currentId);
+  const total = ids.length;
+  const meta = currentSong() ? getMeta(currentSong().content) : {title:""};
+  $("#stageTitle").textContent = meta.title || "Senza titolo";
+  $("#stagePos").textContent = total ? ((idx>=0?idx+1:1) + " / " + total) : "";
+  $("#stagePrev").disabled = idx<=0;
+  $("#stageNext").disabled = idx<0 || idx>=total-1;
+}
+function stageNav(delta){
+  const ids = stageList();
+  const idx = ids.indexOf(currentId);
+  if(idx<0) return;
+  const ni = idx + delta;
+  if(ni<0 || ni>=ids.length) return;       // stop ai bordi
+  currentId = ids[ni];
+  stopScroll();
+  renderSheet(currentSong(), $("#stageSheet"));
+  $("#stageScroll").scrollTop = 0;
+  updateStageInfo();
+  showStageControls();
 }
 function closeStage(){
   if(!stageOpen()) return;
@@ -1067,6 +1106,7 @@ function closeStage(){
   clearTimeout(stageHideTimer);
   document.body.classList.remove("stage-open");
   try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+  openSong(currentId);   // allinea la vista normale e l'elenco al brano su cui ci si è fermati
 }
 
 /* editor */
@@ -1491,6 +1531,8 @@ async function init(){
   $("#scrollBtn").onclick = ()=> scrolling ? stopScroll() : startScroll("#reading","#scrollSpeed","#scrollBtn");
   $("#stageBtn").onclick = ()=> currentSong() && openStage();
   $("#stageExit").onclick = closeStage;
+  $("#stagePrev").onclick = ()=> stageNav(-1);
+  $("#stageNext").onclick = ()=> stageNav(1);
   $("#stageScrollBtn").onclick = ()=>{ scrolling ? stopScroll() : startScroll("#stageScroll","#stageScrollSpeed","#stageScrollBtn"); showStageControls(); };
   $("#stageFsUp").onclick = ()=>{ setFontScale(settings.fontScale+0.1); showStageControls(); };
   $("#stageFsDown").onclick = ()=>{ setFontScale(settings.fontScale-0.1); showStageControls(); };
@@ -1502,6 +1544,7 @@ async function init(){
   document.addEventListener("keydown", (e)=>{
     if(!stageOpen()) return;
     if(e.key==="Escape"){ closeStage(); }
+    else if((e.key==="ArrowRight"||e.key==="ArrowLeft") && e.target.tagName!=="INPUT"){ e.preventDefault(); stageNav(e.key==="ArrowRight"?1:-1); }
     else showStageControls();
   });
   document.addEventListener("fullscreenchange", ()=>{ if(stageOpen() && !document.fullscreenElement) closeStage(); });
